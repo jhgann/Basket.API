@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  basket.api:
+    image: ${DOCKER_REGISTRY}basketapi
+    build:
+      context: .
+      dockerfile: Basket.API/Dockerfile
