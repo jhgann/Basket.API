@@ -84,7 +84,9 @@ namespace Basket.API.Controllers
             return CreatedAtRoute("GetItemInBasket", new { customerId, itemId = item.ProductId }, item);
         }
 
-        [HttpPut("{itemId}")]
+        //TODO: better way to represent the quantity than fromBody?
+        [HttpPut]
+        [Route("{itemId}/UpdateItemQuantity")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -110,7 +112,7 @@ namespace Basket.API.Controllers
         }
 
 
-        [HttpDelete("{itemId}", Name = "RemoveItemFromBasket")]
+        [HttpDelete("{itemId}")]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]

@@ -1,9 +1,9 @@
-FROM microsoft/dotnet:2.1-aspnetcore-runtime AS base
+FROM microsoft/dotnet:2.1.1-aspnetcore-runtime AS base
 WORKDIR /app
 EXPOSE 60676
 EXPOSE 44311
 
-FROM microsoft/dotnet:2.1-sdk AS build
+FROM microsoft/dotnet:2.1.1-sdk AS build
 WORKDIR /src
 COPY Basket.API/Basket.API.csproj Basket.API/
 RUN dotnet restore Basket.API/Basket.API.csproj
