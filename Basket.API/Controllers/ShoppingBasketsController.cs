@@ -10,7 +10,8 @@ namespace Basket.API.Controllers
     /// Because the cache repo doesn't use async methods, actions here are not async.
     /// If using a network data store, these would of course be async.
     /// </summary>
-    [Route("api/[controller]")]
+    [ApiVersion("1")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     public class ShoppingBasketsController : ControllerBase
     {
@@ -26,7 +27,6 @@ namespace Basket.API.Controllers
 
         [HttpGet("{customerId}", Name = "Get")]
         [ProducesResponseType(typeof(ShoppingBasket), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public ActionResult<ShoppingBasket> Get(string customerId)
         {
@@ -38,10 +38,10 @@ namespace Basket.API.Controllers
             return basket;
         }
 
-        [HttpPut]
+        [HttpPost]
         [ProducesResponseType(typeof(ShoppingBasket), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        public ActionResult<ShoppingBasket> Put([FromBody] ShoppingBasket basket)
+        public ActionResult<ShoppingBasket> Post([FromBody] ShoppingBasket basket)
         {
             var basketResult = _cacheRepository.UpdateBasket(basket);
             return CreatedAtRoute("Get", new { customerId = basketResult.CustomerId }, basketResult);

@@ -7,7 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Basket.API.Controllers
 {
-    [Route("api/ShoppingBaskets/{customerId}/[controller]")]
+    [ApiVersion("1")]
+    [Route("api/v{version:apiVersion}/ShoppingBaskets/{customerId}/[controller]")]
     [ApiController]
     public class BasketItemsController : ControllerBase
     {
@@ -55,7 +56,7 @@ namespace Basket.API.Controllers
             return item;
         }
 
-        [HttpPut]
+        [HttpPost]
         [Route("AddItemToBasket")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]

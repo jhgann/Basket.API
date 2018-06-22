@@ -21,6 +21,10 @@ namespace Basket.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddApiVersioning(setupAction =>
+            {
+                setupAction.ReportApiVersions = true;
+            });
 
             services.AddSwaggerGen(c =>
             {

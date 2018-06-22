@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using System;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using TestContext = EndToEndTests.Setup.TestContext;
 
@@ -20,19 +19,151 @@ namespace EndToEndTests.Tests
             _context = new TestContext();
         }
 
+        #region POST TESTS
         [TestMethod]
-        public async Task ShoppingBasketsPutReturnsOkResponse()
+        public async Task ShoppingBasketsPostReturnsOk()
         {
-            var item = new ShoppingBasket
+            var basket = new ShoppingBasket
             {
                 CustomerId = "1"
             };
-            var jsonString = JsonConvert.SerializeObject(item);
+            var response = await PostBasket(basket);
 
-            HttpResponseMessage response = await _context.Client.PutAsync(new Uri("/api/shoppingbaskets", UriKind.Relative), new StringContent(jsonString, Encoding.UTF8, "application/json"));
             response.EnsureSuccessStatusCode();
-
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task ShoppingBasketsPostBadContentReturnsBadRequest()
+        {
+            var basket = new ShoppingBasket {};
+
+            var response = await PostBasket(basket);
+
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        #endregion
+
+        #region GET TESTS
+        [TestMethod]
+        public async Task ShoppingBasketsGetByIdReturnsOk()
+        {
+            var basket = new ShoppingBasket
+            {
+                CustomerId = "1"
+            };
+            var postResponse = await PostBasket(basket);
+            var postResult = postResponse.Content.ReadAsStringAsync().Result;
+
+            var response = await GetAsync(basket.CustomerId);
+            var result = response.Content.ReadAsStringAsync().Result;
+            var resultModel = JsonConvert.DeserializeObject<ShoppingBasket>(result);
+
+            response.EnsureSuccessStatusCode();
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(result, postResult);
+            Assert.AreEqual(basket.CustomerId, resultModel.CustomerId);
+        }
+
+        [TestMethod]
+        public async Task ShoppingBasketsGetByWrongIdReturnsNotFound()
+        {
+            var basket = new ShoppingBasket
+            {
+                CustomerId = "1"
+            };
+            var postResponse = await PostBasket(basket);
+            var postResult = postResponse.Content.ReadAsStringAsync().Result;
+
+            var response = await GetAsync("2");
+
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+        #endregion
+
+        #region DELETE TESTS
+        [TestMethod]
+        public async Task ShoppingBasketsDeleteByIdReturnsOk()
+        {
+            var basket = new ShoppingBasket
+            {
+                CustomerId = "1"
+            };
+            var postResponse = await PostBasket(basket);
+            var postResult = postResponse.Content.ReadAsStringAsync().Result;
+
+            var response = await DeleteAsync(basket.CustomerId);
+
+            response.EnsureSuccessStatusCode();
+            Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task ShoppingBasketsDeleteByIdThenGetReturnsNotFound()
+        {
+            var basket = new ShoppingBasket
+            {
+                CustomerId = "1"
+            };
+            var postResponse = await PostBasket(basket);
+            var postResult = postResponse.Content.ReadAsStringAsync().Result;
+
+            var response = await DeleteAsync(basket.CustomerId);
+            response.EnsureSuccessStatusCode();
+            Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
+
+            var response2 = await GetAsync(basket.CustomerId);
+            Assert.AreEqual(HttpStatusCode.NotFound, response2.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task ShoppingBasketsDeleteByWrongIdReturnsNotFound()
+        {
+            var basket = new ShoppingBasket
+            {
+                CustomerId = "1"
+            };
+            var postResponse = await PostBasket(basket);
+            var postResult = postResponse.Content.ReadAsStringAsync().Result;
+
+            var response = await DeleteAsync("2");
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task ShoppingBasketsDeleteTwiceReturnsNotFound()
+        {
+            var basket = new ShoppingBasket
+            {
+                CustomerId = "1"
+            };
+            var postResponse = await PostBasket(basket);
+            var postResult = postResponse.Content.ReadAsStringAsync().Result;
+
+            var response = await DeleteAsync(basket.CustomerId);
+            response.EnsureSuccessStatusCode();
+            Assert.AreEqual(HttpStatusCode.NoContent, response.StatusCode);
+
+            var response2 = await DeleteAsync(basket.CustomerId);
+            Assert.AreEqual(HttpStatusCode.NotFound, response2.StatusCode);
+        }
+        #endregion
+
+        private async Task<HttpResponseMessage> PostBasket(ShoppingBasket basket)
+        {
+            return await _context.Client.PostAsJsonAsync(new Uri("/api/v1/shoppingbaskets", UriKind.Relative), basket);
+        }
+
+        private async Task<HttpResponseMessage> GetAsync(string customerId)
+        {
+            return await _context.Client.GetAsync($"/api/v1/shoppingbaskets/{customerId}");
+        }
+
+        private async Task<HttpResponseMessage> DeleteAsync(string customerId)
+        {
+            return await _context.Client.DeleteAsync($"/api/v1/shoppingbaskets/{customerId}");
         }
 
         #region IDisposable Support
