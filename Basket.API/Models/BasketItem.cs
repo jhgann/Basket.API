@@ -5,7 +5,7 @@ namespace Basket.API.Models
     /// <summary>
     /// A single item in a shopping basket
     /// </summary>
-    public class BasketItem 
+    public class BasketItem
     {
         [Required]
         [StringLength(50)]

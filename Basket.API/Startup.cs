@@ -38,6 +38,7 @@ namespace Basket.API
 
             services.AddMemoryCache();
             services.AddTransient<ICacheRepository, InMemoryBasketRepository>();
+            services.AddTransient<IBasketService, BasketService>();
         }
     
 

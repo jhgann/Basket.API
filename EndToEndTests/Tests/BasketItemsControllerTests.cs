@@ -182,7 +182,7 @@ namespace EndToEndTests.Tests
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response3.StatusCode);
-            Assert.AreEqual("{\"Quantity\":[\"Quantity must be between 1 and 999.\"]}", result);
+            Assert.AreEqual("[{\"memberNames\":[\"Quantity\"],\"errorMessage\":\"Quantity must be between 1 and 999.\"}]",result);
         }
 
         [TestMethod]

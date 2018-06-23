@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Basket.API.Models;
 using Basket.API.Services;
@@ -13,12 +14,14 @@ namespace Basket.API.Controllers
     [ApiController]
     public class BasketItemsController : ControllerBase
     {
-        ICacheRepository _cacheRepository;
-        ILogger<BasketItemsController> _logger;
+        private readonly ICacheRepository _cacheRepository;
+        private readonly IBasketService _basketService;
+        private readonly ILogger<BasketItemsController> _logger;
 
-        public BasketItemsController(ICacheRepository cacheRepository, ILogger<BasketItemsController> logger)
+        public BasketItemsController(ICacheRepository cacheRepository, IBasketService basketService, ILogger<BasketItemsController> logger)
         {
             _cacheRepository = cacheRepository;
+            _basketService = basketService;
             _logger = logger;
         }
 
@@ -77,10 +80,7 @@ namespace Basket.API.Controllers
                 return ItemAlreadyFound(customerId, item.ProductId);
             }
 
-            //TODO: move logic out
-            // Add the item to the basket
-            shoppingBasket.BasketItems.Add(item);
-            _cacheRepository.UpdateBasket(shoppingBasket);
+            _basketService.AddItemToBasket(shoppingBasket, item);
 
             return CreatedAtRoute("GetItemInBasket", new { customerId, itemId = item.ProductId }, item);
         }
@@ -105,15 +105,13 @@ namespace Basket.API.Controllers
                 return ItemNotFound(customerId, itemId);
             }
 
-            //TODO: move to service?
-            patch.ApplyTo(item);
-            TryValidateModel(item);
-            if (!ModelState.IsValid)
+            // Validate change and update via service
+            var isValid = _basketService.TryUpdateItemInBasket(shoppingBasket, item, patch, out ICollection<ValidationResult> validationResults);
+            if (!isValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(validationResults);
             }
 
-            _cacheRepository.UpdateBasket(shoppingBasket);
             return item;
         }
 
@@ -138,10 +136,7 @@ namespace Basket.API.Controllers
                 return ItemNotFound(customerId, itemId);
             }
 
-            //TODO: move logic out
-            // Add the item to the basket
-            shoppingBasket.BasketItems.Remove(item);
-            _cacheRepository.UpdateBasket(shoppingBasket);
+            _basketService.RemoveItemFromBasket(shoppingBasket, item);
 
             return NoContent();
         }

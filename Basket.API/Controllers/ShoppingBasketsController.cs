@@ -15,15 +15,13 @@ namespace Basket.API.Controllers
     [ApiController]
     public class ShoppingBasketsController : ControllerBase
     {
-        ICacheRepository _cacheRepository;
-        ILogger<ShoppingBasketsController> _logger;
+        private readonly ICacheRepository _cacheRepository;
+        private readonly ILogger<ShoppingBasketsController> _logger;
         public ShoppingBasketsController(ICacheRepository cacheRepository, ILogger<ShoppingBasketsController> logger)
         {
             _cacheRepository = cacheRepository;
             _logger = logger;
         }
-
-        //TODO: any need to get all?
 
         [HttpGet("{customerId}", Name = "Get")]
         [ProducesResponseType(typeof(ShoppingBasket), (int)HttpStatusCode.OK)]
