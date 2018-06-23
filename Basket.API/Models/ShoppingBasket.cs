@@ -8,8 +8,6 @@ namespace Basket.API.Models
         [Required]
         public string CustomerId { get; set; }
 
-        public List<BasketItem> BasketItems { get; set; } = new List<BasketItem>();
-
-
+        public List<BasketItem> BasketItems { get; } = new List<BasketItem>();
     }
 }

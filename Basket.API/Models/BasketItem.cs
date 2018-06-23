@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Basket.API.Models
 {
-    public class BasketItem
+    public class BasketItem 
     {
         [Required]
         public string ProductId { get; set; }

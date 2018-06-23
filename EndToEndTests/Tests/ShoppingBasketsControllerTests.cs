@@ -21,7 +21,7 @@ namespace EndToEndTests.Tests
 
         #region POST TESTS
         [TestMethod]
-        public async Task ShoppingBasketsPostReturnsOk()
+        public async Task ShoppingBasketsPostReturnsCreated()
         {
             var basket = new ShoppingBasket
             {
@@ -151,20 +151,14 @@ namespace EndToEndTests.Tests
         }
         #endregion
 
-        private async Task<HttpResponseMessage> PostBasket(ShoppingBasket basket)
-        {
-            return await _context.Client.PostAsJsonAsync(new Uri("/api/v1/shoppingbaskets", UriKind.Relative), basket);
-        }
+        private async Task<HttpResponseMessage> PostBasket(ShoppingBasket basket) => 
+            await _context.Client.PostAsJsonAsync("/api/v1/shoppingbaskets", basket);
 
-        private async Task<HttpResponseMessage> GetAsync(string customerId)
-        {
-            return await _context.Client.GetAsync($"/api/v1/shoppingbaskets/{customerId}");
-        }
+        private async Task<HttpResponseMessage> GetAsync(string customerId) => 
+            await _context.Client.GetAsync(new Uri($"/api/v1/shoppingbaskets/{customerId}", UriKind.Relative));
 
-        private async Task<HttpResponseMessage> DeleteAsync(string customerId)
-        {
-            return await _context.Client.DeleteAsync($"/api/v1/shoppingbaskets/{customerId}");
-        }
+        private async Task<HttpResponseMessage> DeleteAsync(string customerId) => 
+            await _context.Client.DeleteAsync(new Uri($"/api/v1/shoppingbaskets/{customerId}", UriKind.Relative));
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

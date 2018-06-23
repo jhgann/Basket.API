@@ -87,11 +87,11 @@ namespace Basket.API.Controllers
 
         //TODO: better way to represent the quantity than fromBody?
         [HttpPut]
-        [Route("{itemId}/UpdateItemQuantity")]
+        [Route("{itemId}/UpdateQuantity")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public ActionResult<BasketItem> UpdateItemQuantity(string customerId, string itemId, [FromBody]int quantity)
+        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]int quantity)
         {
             // Try to get a basket to add the item to
             var foundBasket = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
@@ -106,9 +106,15 @@ namespace Basket.API.Controllers
                 return ItemNotFound(customerId, itemId);
             }
 
+            //TODO: move to service?
             item.Quantity = quantity;
+            TryValidateModel(item);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _cacheRepository.UpdateBasket(shoppingBasket);
-            
             return item;
         }
 
@@ -153,7 +159,7 @@ namespace Basket.API.Controllers
         {
             var message = $"Product {itemId} already in basket for customer {customerId}, and cannot be added again.";
             _logger.LogWarning(message);
-            return NotFound(message);
+            return BadRequest(message);
         }
 
         private ActionResult BasketNotFound(string customerId)
