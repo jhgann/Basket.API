@@ -2,6 +2,7 @@
 using System.Net;
 using Basket.API.Models;
 using Basket.API.Services;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -57,7 +58,6 @@ namespace Basket.API.Controllers
         }
 
         [HttpPost]
-        [Route("AddItemToBasket")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -85,13 +85,11 @@ namespace Basket.API.Controllers
             return CreatedAtRoute("GetItemInBasket", new { customerId, itemId = item.ProductId }, item);
         }
 
-        //TODO: better way to represent the quantity than fromBody?
-        [HttpPut]
-        [Route("{itemId}/UpdateQuantity")]
+        [HttpPatch("{itemId}")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]int quantity)
+        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]JsonPatchDocument<BasketItem>  patch)
         {
             // Try to get a basket to add the item to
             var foundBasket = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
@@ -100,6 +98,7 @@ namespace Basket.API.Controllers
                 return BasketNotFound(customerId);
             }
 
+            // Check if item already exists in basket
             var foundItem = _cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item);
             if (!foundItem)
             {
@@ -107,7 +106,7 @@ namespace Basket.API.Controllers
             }
 
             //TODO: move to service?
-            item.Quantity = quantity;
+            patch.ApplyTo(item);
             TryValidateModel(item);
             if (!ModelState.IsValid)
             {
@@ -132,6 +131,7 @@ namespace Basket.API.Controllers
                 return BasketNotFound(customerId);
             }
 
+            // Check if item already exists in basket
             var foundItem = _cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item);
             if (!foundItem)
             {
@@ -145,8 +145,6 @@ namespace Basket.API.Controllers
 
             return NoContent();
         }
-
-        
 
         private ActionResult ItemNotFound(string customerId, string itemId)
         {

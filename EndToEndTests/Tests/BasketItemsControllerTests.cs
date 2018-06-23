@@ -1,10 +1,12 @@
 ﻿using Basket.API.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using TestContext = EndToEndTests.Setup.TestContext;
 
@@ -120,7 +122,7 @@ namespace EndToEndTests.Tests
         }
         #endregion
 
-        #region PUT TESTS
+        #region PATCH TESTS
         [TestMethod]
         public async Task BasketItemsChangeQuantityReturnsOkAndItem()
         {
@@ -141,7 +143,9 @@ namespace EndToEndTests.Tests
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 5;
-            var response3 = await PutItemQuantityAsync(basket, item, newQuantity);
+            var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
+            
+            var response3 = await PatchItemAsync(basket, item, patch);
             var result = response3.Content.ReadAsStringAsync().Result;
             var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
 
@@ -173,7 +177,8 @@ namespace EndToEndTests.Tests
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 0;
-            var response3 = await PutItemQuantityAsync(basket, item, newQuantity);
+            var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
+            var response3 = await PatchItemAsync(basket, item, patch);
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response3.StatusCode);
@@ -181,7 +186,7 @@ namespace EndToEndTests.Tests
         }
 
         [TestMethod]
-        public async Task BasketItemsPutQuantityWithWrongBasketReturnsNotFound()
+        public async Task BasketItemsChangeQuantityWithWrongBasketReturnsNotFound()
         {
             var wrongBasket = new ShoppingBasket
             {
@@ -204,7 +209,9 @@ namespace EndToEndTests.Tests
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 5;
-            var response3 = await PutItemQuantityAsync(wrongBasket, item, newQuantity);
+            var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
+
+            var response3 = await PatchItemAsync(wrongBasket, item, patch);
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.NotFound, response3.StatusCode);
@@ -212,7 +219,7 @@ namespace EndToEndTests.Tests
         }
 
         [TestMethod]
-        public async Task BasketItemsPutQuantityWithWrongBasketItemReturnsNotFound()
+        public async Task BasketItemsChangeQuantityWithWrongBasketItemReturnsNotFound()
         {
             var basket = new ShoppingBasket
             {
@@ -238,7 +245,9 @@ namespace EndToEndTests.Tests
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 5;
-            var response3 = await PutItemQuantityAsync(basket, wrongItem, newQuantity);
+            var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
+
+            var response3 = await PatchItemAsync(basket, wrongItem, patch);
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.NotFound, response3.StatusCode);
@@ -539,10 +548,12 @@ namespace EndToEndTests.Tests
             await _context.Client.PostAsJsonAsync("/api/v1/shoppingbaskets", basket);
 
         private async Task<HttpResponseMessage> PostBasketItemAsync(ShoppingBasket basket, BasketItem item) => 
-            await _context.Client.PostAsJsonAsync($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems/AddItemToBasket", item);
+            await _context.Client.PostAsJsonAsync($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems", item);
 
-        private async Task<HttpResponseMessage> PutItemQuantityAsync(ShoppingBasket basket, BasketItem item, int quantity) =>
-            await _context.Client.PutAsJsonAsync($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems/{item.ProductId}/UpdateQuantity", quantity);
+        private async Task<HttpResponseMessage> PatchItemAsync(ShoppingBasket basket, BasketItem item, JsonPatchDocument<BasketItem> patch) {
+            var jsonString = JsonConvert.SerializeObject(patch);
+            return await _context.Client.PatchAsync(new Uri($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems/{item.ProductId}", UriKind.Relative), new StringContent(jsonString, Encoding.UTF8, "application/json"));
+        }
 
         private async Task<HttpResponseMessage> GetAsync(string customerId) =>
             await _context.Client.GetAsync(new Uri($"/api/v1/shoppingbaskets/{customerId}/basketitems", UriKind.Relative));
