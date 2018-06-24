@@ -11,3 +11,12 @@ services:
       dockerfile: Basket.API/Dockerfile
     depends_on:
       - rabbitmq
+  clientapp:
+    image: ${DOCKER_REGISTRY}clientapp
+    build:
+      context: .
+      dockerfile: ClientApp/Dockerfile
+    depends_on:
+      - rabbitmq
+      - basket.api
+

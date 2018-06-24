@@ -57,7 +57,6 @@ namespace Basket.API.Services
             }
             else
             {
-                // TODO: Would this ever be hit?
                 _logger.LogWarning("Basket not updated for customer: {0}", basket.CustomerId);
             }
             return result;

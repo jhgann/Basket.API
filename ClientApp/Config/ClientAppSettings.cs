@@ -1,6 +1,6 @@
-﻿namespace Basket.API.Config
+﻿namespace ClientApp.Config
 {
-    public class BasketSettings
+    public class ClientAppSettings
     {
         /// <summary>
         /// Connection string for the event bus

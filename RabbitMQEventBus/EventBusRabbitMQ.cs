@@ -32,13 +32,13 @@ namespace RabbitMQEventBus
         private string _queueName;
 
         public EventBusRabbitMQ(IRabbitMQPersistentConnection persistentConnection, ILogger<EventBusRabbitMQ> logger,
-            ILifetimeScope autofac, IEventBusSubscriptionsManager subsManager, string queueName = null, int retryCount = 5)
+            ILifetimeScope autofac, IEventBusSubscriptionsManager subsManager, string queueName = null, int retryCount = 5, bool isConsumer = true)
         {
             _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _subsManager = subsManager ?? new InMemoryEventBusSubscriptionsManager();
             _queueName = queueName;
-            _consumerChannel = CreateConsumerChannel();
+            _consumerChannel = CreateConsumerChannel(isConsumer);
             _autofac = autofac;
             _retryCount = retryCount;
             _subsManager.OnEventRemoved += SubsManager_OnEventRemoved;
@@ -85,7 +85,7 @@ namespace RabbitMQEventBus
                     .Name;
 
                 channel.ExchangeDeclare(exchange: BROKER_NAME,
-                                    type: "direct");
+                                    type: "fanout");
 
                 var message = JsonConvert.SerializeObject(@event);
                 var body = Encoding.UTF8.GetBytes(message);
@@ -162,7 +162,7 @@ namespace RabbitMQEventBus
             _subsManager.Clear();
         }
 
-        private IModel CreateConsumerChannel()
+        private IModel CreateConsumerChannel(bool isConsumer)
         {
             if (!_persistentConnection.IsConnected)
             {
@@ -172,7 +172,7 @@ namespace RabbitMQEventBus
             var channel = _persistentConnection.CreateModel();
 
             channel.ExchangeDeclare(exchange: BROKER_NAME,
-                                 type: "direct");
+                                 type: "fanout");
 
             channel.QueueDeclare(queue: _queueName,
                                  durable: true,
@@ -180,27 +180,29 @@ namespace RabbitMQEventBus
                                  autoDelete: false,
                                  arguments: null);
 
-
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += async (model, ea) =>
+            if (isConsumer)
             {
-                var eventName = ea.RoutingKey;
-                var message = Encoding.UTF8.GetString(ea.Body);
+                var consumer = new EventingBasicConsumer(channel);
+                consumer.Received += async (model, ea) =>
+                {
+                    var eventName = ea.RoutingKey;
+                    var message = Encoding.UTF8.GetString(ea.Body);
 
-                await ProcessEvent(eventName, message);
+                    await ProcessEvent(eventName, message);
 
-                channel.BasicAck(ea.DeliveryTag,multiple:false);
-            };
+                    channel.BasicAck(ea.DeliveryTag,multiple:false);
+                };
 
-            channel.BasicConsume(queue: _queueName,
-                                 autoAck: false,
-                                 consumer: consumer);
+                channel.BasicConsume(queue: _queueName,
+                                     autoAck: false,
+                                     consumer: consumer);
 
-            channel.CallbackException += (sender, ea) =>
-            {
-                _consumerChannel.Dispose();
-                _consumerChannel = CreateConsumerChannel();
-            };
+                channel.CallbackException += (sender, ea) =>
+                {
+                    _consumerChannel.Dispose();
+                    _consumerChannel = CreateConsumerChannel(true);
+                };
+            }
 
             return channel;
         }

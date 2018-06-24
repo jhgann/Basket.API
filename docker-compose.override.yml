@@ -2,22 +2,39 @@ version: '3.4'
 
 services:
   basket.api:
+    hostname: basket.api
+    container_name: basket.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443;http://+:80
-      - ASPNETCORE_HTTPS_PORT=44311
+      - ASPNETCORE_URLS=http://0.0.0.0:80
       - EventBusConnection=rabbit
       - EventBusUserName=guest
       - EventBusPassword=guest
     ports:
-      - "60676:80"
-      - "44311:443"
+      - "55311:80"
     volumes:
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+
   rabbitmq:
     hostname: rabbit
     container_name: rabbit
     ports:
       - "15672:15672"  # Important: In a production environment your should remove the external port
       - "5672:5672"    # Important: In a production environment your should remove the external port
+  
+  clientapp:
+    hostname: clientapp
+    container_name: clientapp
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      - EventBusConnection=rabbit
+      - EventBusUserName=guest
+      - EventBusPassword=guest
+      - BasketUrl=http://basket.api
+    ports:
+      - "55322:80"
+    volumes:
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro

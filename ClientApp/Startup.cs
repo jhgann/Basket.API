@@ -1,23 +1,26 @@
-﻿using Autofac;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Basket.API.Config;
-using Basket.API.IntegrationEvents.EventHandlers;
-using Basket.API.IntegrationEvents.Events;
-using Basket.API.Services;
+using ClientApp.Config;
+using ClientApp.Controllers;
 using EventBusCore;
 using EventBusCore.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQEventBus;
 using Swashbuckle.AspNetCore.Swagger;
-using System;
 
-namespace Basket.API
+namespace ClientApp
 {
     public class Startup
     {
@@ -32,25 +35,27 @@ namespace Basket.API
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddApiVersioning(setupAction =>
-            {
-                setupAction.ReportApiVersions = true;
-            });
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
                 {
                     Version = "v1",
-                    Title = "Basket API",
-                    Description = "A Basket API built in .NET Core 2.1"
+                    Title = "Client API",
+                    Description = "A Client API built in .NET Core 2.1"
                 });
             });
-            services.Configure<BasketSettings>(Configuration);
+            services.Configure<ClientAppSettings>(Configuration);
 
-            services.AddSingleton<IDictionaryContext, DictionaryContext>();
-            services.AddTransient<IBasketRepository, InMemoryBasketRepository>();
-            services.AddTransient<IBasketService, BasketService>();
+            services.AddHttpClient("basket", client =>
+            {
+                client.BaseAddress = new Uri(Configuration["BasketUrl"]);
+            });
+            //services.AddTransient<DemoController>();
+
+            //services.AddSingleton<IDictionaryContext, DictionaryContext>();
+            //services.AddTransient<IBasketRepository, InMemoryBasketRepository>();
+            //services.AddTransient<IBasketService, BasketService>();
 
             if (bool.Parse(Configuration["EnableEventBus"]))
             {
@@ -140,18 +145,18 @@ namespace Basket.API
                     retryCount = int.Parse(Configuration["EventBusRetryCount"]);
                 }
 
-                return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount, true);
+                return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount, false);
             });
 
             services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
-            services.AddTransient<ProductPriceChangedIntegrationEventHandler>();
+            //services.AddTransient<ProductPriceChangedIntegrationEventHandler>();
         }
 
         private void ConfigureEventBus(IApplicationBuilder app)
         {
             var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
 
-            eventBus.Subscribe<ProductPriceChangedIntegrationEvent, ProductPriceChangedIntegrationEventHandler>();
+           // eventBus.Subscribe<ProductPriceChangedIntegrationEvent, ProductPriceChangedIntegrationEventHandler>();
         }
     }
 }

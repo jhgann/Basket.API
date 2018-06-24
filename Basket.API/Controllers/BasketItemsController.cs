@@ -9,6 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Basket.API.Controllers
 {
+    /// <summary>
+    /// Controller used to access items within a shopping basket.
+    /// Because the cache repo doesn't use async methods, actions here are not async.
+    /// If using a network data store, these should change to be async.
+    /// </summary>
     [ApiVersion("1")]
     [Route("api/v{version:apiVersion}/ShoppingBaskets/{customerId}/[controller]")]
     [ApiController]
@@ -25,34 +30,39 @@ namespace Basket.API.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Get all items in a shopping basket.
+        /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(List<BasketItem>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public ActionResult<List<BasketItem>> GetItemsInBasket(string customerId)
         {
-            var found = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
-            if (!found)
+            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
             return shoppingBasket.BasketItems;
         }
 
+        /// <summary>
+        /// Gets a single item within a shopping basket.
+        /// </summary>
         [HttpGet("{itemId}", Name = "GetItemInBasket" )]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public ActionResult<BasketItem> GetItemInBasket(string customerId, string itemId)
         {
-            var foundBasket = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
-            if (!foundBasket)
+            // Check if the basket exists
+            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
-            var foundItem = _cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item);
-            if (!foundItem)
+            // Check if item exists in basket
+            if (!_cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item))
             {
                 return ItemNotFound(customerId, itemId);
             }
@@ -60,22 +70,23 @@ namespace Basket.API.Controllers
             return item;
         }
 
+        /// <summary>
+        /// Add a product to a shopping basket
+        /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public ActionResult<BasketItem> AddItemToBasket(string customerId, [FromBody] BasketItem item)
         {
-            // Try to get a basket to add the item to
-            var foundBasket = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
-            if (!foundBasket)
+            // Check if the basket cannot be found
+            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item already exists in basket
-            var foundItem = _cacheRepository.TryGetItemInBasket(item.ProductId, shoppingBasket, out BasketItem existingItem);
-            if (foundItem)
+            if (_cacheRepository.TryGetItemInBasket(item.ProductId, shoppingBasket, out BasketItem existingItem))
             {
                 return ItemAlreadyFound(customerId, item.ProductId);
             }
@@ -85,29 +96,29 @@ namespace Basket.API.Controllers
             return CreatedAtRoute("GetItemInBasket", new { customerId, itemId = item.ProductId }, item);
         }
 
+        /// <summary>
+        /// Updates the quantity of of a product in a shopping basket
+        /// </summary>
         [HttpPatch("{itemId}")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]JsonPatchDocument<BasketItem>  patch)
+        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]JsonPatchDocument<BasketItem> patch)
         {
             // Try to get a basket to add the item to
-            var foundBasket = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
-            if (!foundBasket)
+            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item already exists in basket
-            var foundItem = _cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item);
-            if (!foundItem)
+            if (!_cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item))
             {
                 return ItemNotFound(customerId, itemId);
             }
 
             // Validate change and update via service
-            var isValid = _basketService.TryUpdateItemInBasket(shoppingBasket, item, patch, out ICollection<ValidationResult> validationResults);
-            if (!isValid)
+            if (!_basketService.TryUpdateItemInBasket(shoppingBasket, item, patch, out ICollection<ValidationResult> validationResults))
             {
                 return BadRequest(validationResults);
             }
@@ -115,7 +126,9 @@ namespace Basket.API.Controllers
             return item;
         }
 
-
+        /// <summary>
+        /// Delete an item from a shopping basket
+        /// </summary>
         [HttpDelete("{itemId}")]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -123,15 +136,13 @@ namespace Basket.API.Controllers
         public ActionResult RemoveItemFromBasket(string customerId, string itemId)
         {
             // Try to get a basket to remove the item from
-            var foundBasket = _cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket);
-            if (!foundBasket)
+            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item already exists in basket
-            var foundItem = _cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item);
-            if (!foundItem)
+            if (!_cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item))
             {
                 return ItemNotFound(customerId, itemId);
             }
@@ -141,6 +152,7 @@ namespace Basket.API.Controllers
             return NoContent();
         }
 
+        #region Private methods
         private ActionResult ItemNotFound(string customerId, string itemId)
         {
             var message = $"Product {itemId} could not be found in basket for customer {customerId}.";
@@ -161,5 +173,6 @@ namespace Basket.API.Controllers
             _logger.LogWarning(message);
             return NotFound(message);
         }
+        #endregion
     }
 }
