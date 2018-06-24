@@ -14,7 +14,7 @@ namespace Basket.API.IntegrationEvents.Events
         public string ProductId { get; private set; }
 
         /// <summary>
-        /// New price of the product
+        /// New price of the product.
         /// </summary>
         public decimal NewPrice { get; private set; }
 

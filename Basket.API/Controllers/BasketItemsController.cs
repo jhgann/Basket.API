@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Basket.API.Models;
@@ -19,15 +20,15 @@ namespace Basket.API.Controllers
     [ApiController]
     public class BasketItemsController : ControllerBase
     {
-        private readonly IBasketRepository _cacheRepository;
+        private readonly IBasketRepository _basketRepository;
         private readonly IBasketService _basketService;
         private readonly ILogger<BasketItemsController> _logger;
 
-        public BasketItemsController(IBasketRepository cacheRepository, IBasketService basketService, ILogger<BasketItemsController> logger)
+        public BasketItemsController(IBasketRepository basketRepository, IBasketService basketService, ILogger<BasketItemsController> logger)
         {
-            _cacheRepository = cacheRepository;
-            _basketService = basketService;
-            _logger = logger;
+            _basketRepository = basketRepository ?? throw new ArgumentNullException(nameof(basketRepository));
+            _basketService = basketService ?? throw new ArgumentNullException(nameof(basketService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace Basket.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public ActionResult<List<BasketItem>> GetItemsInBasket(string customerId)
         {
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
@@ -56,13 +57,13 @@ namespace Basket.API.Controllers
         public ActionResult<BasketItem> GetItemInBasket(string customerId, string itemId)
         {
             // Check if the basket exists
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item exists in basket
-            if (!_cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item))
+            if (!_basketRepository.TryGetItemInBasket(itemId, customerId, out BasketItem item))
             {
                 return ItemNotFound(customerId, itemId);
             }
@@ -80,13 +81,13 @@ namespace Basket.API.Controllers
         public ActionResult<BasketItem> AddItemToBasket(string customerId, [FromBody] BasketItem item)
         {
             // Check if the basket cannot be found
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item already exists in basket
-            if (_cacheRepository.TryGetItemInBasket(item.ProductId, shoppingBasket, out BasketItem existingItem))
+            if (_basketRepository.TryGetItemInBasket(item.ProductId, customerId, out BasketItem existingItem))
             {
                 return ItemAlreadyFound(customerId, item.ProductId);
             }
@@ -106,13 +107,13 @@ namespace Basket.API.Controllers
         public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]JsonPatchDocument<BasketItem> patch)
         {
             // Try to get a basket to add the item to
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item already exists in basket
-            if (!_cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item))
+            if (!_basketRepository.TryGetItemInBasket(itemId, customerId, out BasketItem item))
             {
                 return ItemNotFound(customerId, itemId);
             }
@@ -136,13 +137,13 @@ namespace Basket.API.Controllers
         public ActionResult RemoveItemFromBasket(string customerId, string itemId)
         {
             // Try to get a basket to remove the item from
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
             {
                 return BasketNotFound(customerId);
             }
 
             // Check if item already exists in basket
-            if (!_cacheRepository.TryGetItemInBasket(itemId, shoppingBasket, out BasketItem item))
+            if (!_basketRepository.TryGetItemInBasket(itemId, customerId, out BasketItem item))
             {
                 return ItemNotFound(customerId, itemId);
             }

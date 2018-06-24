@@ -2,6 +2,7 @@
 using Basket.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Net;
 
 namespace Basket.API.Controllers
@@ -16,12 +17,12 @@ namespace Basket.API.Controllers
     [ApiController]
     public class ShoppingBasketsController : ControllerBase
     {
-        private readonly IBasketRepository _cacheRepository;
+        private readonly IBasketRepository _basketRepository;
         private readonly ILogger<ShoppingBasketsController> _logger;
-        public ShoppingBasketsController(IBasketRepository cacheRepository, ILogger<ShoppingBasketsController> logger)
+        public ShoppingBasketsController(IBasketRepository basketRepository, ILogger<ShoppingBasketsController> logger)
         {
-            _cacheRepository = cacheRepository;
-            _logger = logger;
+            _basketRepository = basketRepository ?? throw new ArgumentNullException(nameof(basketRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -32,7 +33,7 @@ namespace Basket.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public ActionResult<ShoppingBasket> Get(string customerId)
         {
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket basket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket basket))
             {
                 return BasketNotFound(customerId);
             }
@@ -48,7 +49,7 @@ namespace Basket.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public ActionResult<ShoppingBasket> Post([FromBody] ShoppingBasket basket)
         {
-            var basketResult = _cacheRepository.UpdateBasket(basket);
+            var basketResult = _basketRepository.UpdateBasket(basket);
             return CreatedAtRoute("Get", new { customerId = basketResult.CustomerId }, basketResult);
         }
 
@@ -60,12 +61,12 @@ namespace Basket.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         public ActionResult Delete(string customerId)
         {
-            if (!_cacheRepository.TryGetBasket(customerId, out ShoppingBasket basket))
+            if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket basket))
             {
                 return BasketNotFound(customerId);
             }
 
-            _cacheRepository.DeleteBasket(customerId);
+            _basketRepository.DeleteBasket(customerId);
             return NoContent();
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Basket.API.Models;
 using Microsoft.Extensions.Logging;
 
@@ -8,10 +9,11 @@ namespace Basket.API.Services
     {
         private readonly IDictionaryContext _dictionaryContext;
         private readonly ILogger<InMemoryBasketRepository> _logger;
+
         public InMemoryBasketRepository(IDictionaryContext dictionaryContext, ILogger<InMemoryBasketRepository> logger)
         {
-            _dictionaryContext = dictionaryContext;
-            _logger = logger;
+            _dictionaryContext = dictionaryContext ?? throw new ArgumentNullException(nameof(dictionaryContext));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public ICollection<ShoppingBasket> GetBaskets()
@@ -34,17 +36,17 @@ namespace Basket.API.Services
             return foundBasket;
         }
 
-        public bool TryGetItemInBasket(string itemId, ShoppingBasket basket, out BasketItem foundItem)
+        public bool TryGetItemInBasket(string itemId, string customerId, out BasketItem foundItem)
         {
-            foundItem = basket.BasketItems.Find(basketItem => basketItem.ProductId == itemId);
+            foundItem = _dictionaryContext.Baskets[customerId].BasketItems.Find(basketItem => basketItem.ProductId == itemId);
 
             if (foundItem == null)
             {
-                _logger.LogWarning($"Could not find item {itemId} in basket for customer: {basket.CustomerId}");
+                _logger.LogWarning($"Could not find item {itemId} in basket for customer: {customerId}");
                 return false;
             }
 
-            _logger.LogInformation($"Found product {itemId} in basket for customer: {basket.CustomerId}");
+            _logger.LogInformation($"Found product {itemId} in basket for customer: {customerId}");
             return true;
         }
 
@@ -66,7 +68,5 @@ namespace Basket.API.Services
         {
             _dictionaryContext.Baskets.Remove(customerId);
         }
-
-        
     }
 }

@@ -105,7 +105,7 @@ namespace ClientApp
             // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(setupAction =>
             {
-                setupAction.SwaggerEndpoint("/swagger/v1/swagger.json", "Basket API V1");
+                setupAction.SwaggerEndpoint("/swagger/v1/swagger.json", "Client API V1");
             });
 
             if (env.IsDevelopment())

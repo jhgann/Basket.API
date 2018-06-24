@@ -26,13 +26,19 @@ namespace ClientApp.Controllers
         public DemoController(IHttpClientFactory httpClientFactory, IOptions<ClientAppSettings> settings, IEventBus eventBus)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+
             _client = _httpClientFactory.CreateClient("basket");
-            _eventBus = eventBus;
         }
 
+        /// <summary>
+        /// Demonstrates a call to get a basket from the Basket API.
+        /// </summary>
+        /// <param name="customerId">The id of the customer.</param>
+        /// <returns>A JSON string of the basket.</returns>
         [HttpGet]
         [Route("Basket/{customerId}")]
-        public async Task<ActionResult<string>> GetBasket(string customerId)
+        public async Task<ActionResult<ShoppingBasket>> GetBasket(string customerId)
         {
             var response = await _client.GetAsync($"/api/v1/shoppingbaskets/{customerId}");
             var result = response.Content.ReadAsStringAsync().Result;
@@ -40,12 +46,18 @@ namespace ClientApp.Controllers
             {
                 return NotFound(result);
             }
-            return result;
+            var resultModel = JsonConvert.DeserializeObject<ShoppingBasket>(result);
+            return resultModel;
         }
 
+        /// <summary>
+        /// Demonstrates a call to add a basket to the Basket API.
+        /// </summary>
+        /// <param name="basket">The basket to create.</param>
+        /// <returns>A JSON string of the basket.</returns>
         [HttpPost]
         [Route("CreateBasket")]
-        public async Task<ActionResult<string>> CreateBasket([FromBody] ShoppingBasket basket)
+        public async Task<ActionResult<ShoppingBasket>> CreateBasket([FromBody] ShoppingBasket basket)
         {
             var response = await _client.PostAsJsonAsync($"/api/v1/shoppingbaskets", basket);
             var result = response.Content.ReadAsStringAsync().Result;
@@ -53,9 +65,14 @@ namespace ClientApp.Controllers
             {
                 return BadRequest(result);
             }
-            return Created(response.Headers.Location, result);
+            var resultModel = JsonConvert.DeserializeObject<ShoppingBasket>(result);
+            return Created(response.Headers.Location, resultModel);
         }
 
+        /// <summary>
+        /// Demonstrates a call to delete a basket from the Basket API.
+        /// </summary>
+        /// <param name="customerId">The id of the customer, whose basket should be deleted.</param>
         [HttpDelete]
         [Route("DeleteBasket/{customerId}")]
         public async Task<ActionResult> DeleteBasket(string customerId)
@@ -71,24 +88,24 @@ namespace ClientApp.Controllers
 
         [HttpPost]
         [Route("AddProductToBasket")]
-        public async Task<ActionResult<string>> AddProductToBasket(string customerId, [FromBody] BasketItem item)
+        public async Task<ActionResult<BasketItem>> AddProductToBasket(string customerId, [FromBody] BasketItem item)
         {
             var response = await _client.PostAsJsonAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems", item);
             var result = response.Content.ReadAsStringAsync().Result;
-            if (response.StatusCode == HttpStatusCode.BadRequest)
+            switch (response.StatusCode)
             {
-                return BadRequest(result);
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(result);
+                case HttpStatusCode.NotFound:
+                    return NotFound(result);
             }
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return NotFound(result);
-            }
-            return Created(response.Headers.Location, result);
+            var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
+            return Created(response.Headers.Location, resultModel);
         }
 
         [HttpGet]
         [Route("Basket/{customerId}/BasketItems/{itemId}")]
-        public async Task<ActionResult<string>> GetItemInBasket(string customerId, string itemId)
+        public async Task<ActionResult<BasketItem>> GetItemInBasket(string customerId, string itemId)
         {
             var response = await _client.GetAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{itemId}");
             var result = response.Content.ReadAsStringAsync().Result;
@@ -96,7 +113,8 @@ namespace ClientApp.Controllers
             {
                 return NotFound(result);
             }
-            return result;
+            var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
+            return Created(response.Headers.Location, resultModel);
         }
 
         [HttpPost]
@@ -111,13 +129,12 @@ namespace ClientApp.Controllers
             var jsonString = JsonConvert.SerializeObject(patch);
             var response = await _client.PatchAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{itemId}", new StringContent(jsonString, Encoding.UTF8, "application/json"));
             var result = response.Content.ReadAsStringAsync().Result;
-            if (response.StatusCode == HttpStatusCode.BadRequest)
+            switch (response.StatusCode)
             {
-                return BadRequest(result);
-            }
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return NotFound(result);
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(result);
+                case HttpStatusCode.NotFound:
+                    return NotFound(result);
             }
 
             var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);

@@ -5,6 +5,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Basket.API.Services
 {
+    /// <summary>
+    /// Interface for service that will handle business logic related to the shopping basket.
+    /// </summary>
     public interface IBasketService
     {
         /// <summary>

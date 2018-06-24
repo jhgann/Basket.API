@@ -85,9 +85,9 @@ namespace Basket.API
                 RegisterEventBus(services);
             }
 
+            // Needed for Autofac, which was needed for the RabbitMQ implementation.
             var container = new ContainerBuilder();
             container.Populate(services);
-
             return new AutofacServiceProvider(container.Build());
         }
 
@@ -117,6 +117,7 @@ namespace Basket.API
             //app.UseHttpsRedirection();
             app.UseMvc();
 
+            // Option to temporarily disable the event bus, as it is not happy with the EndToEndTests project
             if (bool.Parse(Configuration["EnableEventBus"]))
             {
                 ConfigureEventBus(app);

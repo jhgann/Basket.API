@@ -1,6 +1,7 @@
 ﻿using Basket.API.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -11,25 +12,25 @@ namespace Basket.API.Services
     /// </summary>
     public class BasketService : IBasketService
     {
-        private readonly IBasketRepository _cacheRepository;
+        private readonly IBasketRepository _basketRepository;
         private readonly ILogger<BasketService> _logger;
 
-        public BasketService(IBasketRepository cacheRepository, ILogger<BasketService> logger)
+        public BasketService(IBasketRepository basketRepository, ILogger<BasketService> logger)
         {
-            _cacheRepository = cacheRepository;
-            _logger = logger;
+            _basketRepository = basketRepository ?? throw new ArgumentNullException(nameof(basketRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public void AddItemToBasket(ShoppingBasket basket, BasketItem item)
         {
             basket.BasketItems.Add(item);
-            _cacheRepository.UpdateBasket(basket);
+            _basketRepository.UpdateBasket(basket);
         }
 
         public void RemoveItemFromBasket(ShoppingBasket basket, BasketItem item)
         {
             basket.BasketItems.Remove(item);
-            _cacheRepository.UpdateBasket(basket);
+            _basketRepository.UpdateBasket(basket);
         }
 
         public bool TryUpdateItemInBasket(ShoppingBasket basket, BasketItem item, JsonPatchDocument<BasketItem> patch, out ICollection<ValidationResult> validationResults)
@@ -42,7 +43,7 @@ namespace Basket.API.Services
 
             if (isValid)
             {
-                _cacheRepository.UpdateBasket(basket);
+                _basketRepository.UpdateBasket(basket);
             }
             return isValid;
         }
