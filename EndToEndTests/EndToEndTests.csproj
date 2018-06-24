@@ -24,4 +24,18 @@
     <ProjectReference Include="..\Basket.API\Basket.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <SourceFiles Include="..\Basket.API\appsettings.json" />
+    <SourceFiles Include="..\Basket.API\appsettings.Development.json" />
+    <SourceFiles Include="..\Basket.API\appsettings.Testing.json" />
+  </ItemGroup>
+
+  <Target Name="CopyFiles">
+    <Copy SourceFiles="@(SourceFiles)" DestinationFolder="$(OutDir)" />
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <CallTarget Targets="CopyFiles" />
+  </Target>
+
 </Project>

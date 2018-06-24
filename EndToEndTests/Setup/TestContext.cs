@@ -19,7 +19,11 @@ namespace EndToEndTests.Setup
 
         private void SetUpClient()
         {
+            // TODO: Currently disabling message bus during testing as it throws errors while trying to connect.
+            //       The message bus only exists when running the app in docker.
+            //       Will need to get it working or see about mocking it.
             var config = new ConfigurationBuilder()
+                .AddJsonFile($"appsettings.Testing.json", optional: false) 
                 .AddEnvironmentVariables()
                 .Build();
 

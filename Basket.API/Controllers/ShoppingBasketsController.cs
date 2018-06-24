@@ -15,9 +15,9 @@ namespace Basket.API.Controllers
     [ApiController]
     public class ShoppingBasketsController : ControllerBase
     {
-        private readonly ICacheRepository _cacheRepository;
+        private readonly IBasketRepository _cacheRepository;
         private readonly ILogger<ShoppingBasketsController> _logger;
-        public ShoppingBasketsController(ICacheRepository cacheRepository, ILogger<ShoppingBasketsController> logger)
+        public ShoppingBasketsController(IBasketRepository cacheRepository, ILogger<ShoppingBasketsController> logger)
         {
             _cacheRepository = cacheRepository;
             _logger = logger;

@@ -1,22 +1,27 @@
-﻿using Basket.API.Models;
-using Microsoft.Extensions.Caching.Memory;
+﻿using System.Collections.Generic;
+using Basket.API.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Basket.API.Services
 {
-    public class InMemoryBasketRepository : ICacheRepository
+    public class InMemoryBasketRepository : IBasketRepository
     {
-        IMemoryCache _memoryCache;
-        ILogger<InMemoryBasketRepository> _logger;
-        public InMemoryBasketRepository(IMemoryCache memoryCache, ILogger<InMemoryBasketRepository> logger)
+        private readonly IDictionaryContext _dictionaryContext;
+        private readonly ILogger<InMemoryBasketRepository> _logger;
+        public InMemoryBasketRepository(IDictionaryContext dictionaryContext, ILogger<InMemoryBasketRepository> logger)
         {
-            _memoryCache = memoryCache;
+            _dictionaryContext = dictionaryContext;
             _logger = logger;
+        }
+
+        public ICollection<ShoppingBasket> GetBaskets()
+        {
+            return _dictionaryContext.Baskets.Values;
         }
 
         public bool TryGetBasket(string customerId, out ShoppingBasket basket)
         {
-            var foundBasket = _memoryCache.TryGetValue(customerId, out basket);
+            var foundBasket = _dictionaryContext.Baskets.TryGetValue(customerId, out basket);
 
             if (!foundBasket)
             {
@@ -45,7 +50,7 @@ namespace Basket.API.Services
 
         public ShoppingBasket UpdateBasket(ShoppingBasket basket)
         {
-            var result = _memoryCache.Set(basket.CustomerId, basket);
+            var result = _dictionaryContext.Baskets[basket.CustomerId] = basket;
             if (result != null)
             {
                 _logger.LogInformation("Updated basket for customer: {0}", basket.CustomerId);
@@ -60,9 +65,9 @@ namespace Basket.API.Services
 
         public void DeleteBasket(string customerId)
         {
-            _memoryCache.Remove(customerId);
+            _dictionaryContext.Baskets.Remove(customerId);
         }
 
-
+        
     }
 }

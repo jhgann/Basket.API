@@ -1,8 +1,13 @@
 version: '3.4'
 
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+
   basket.api:
     image: ${DOCKER_REGISTRY}basketapi
     build:
       context: .
       dockerfile: Basket.API/Dockerfile
+    depends_on:
+      - rabbitmq

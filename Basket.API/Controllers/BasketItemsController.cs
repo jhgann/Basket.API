@@ -14,11 +14,11 @@ namespace Basket.API.Controllers
     [ApiController]
     public class BasketItemsController : ControllerBase
     {
-        private readonly ICacheRepository _cacheRepository;
+        private readonly IBasketRepository _cacheRepository;
         private readonly IBasketService _basketService;
         private readonly ILogger<BasketItemsController> _logger;
 
-        public BasketItemsController(ICacheRepository cacheRepository, IBasketService basketService, ILogger<BasketItemsController> logger)
+        public BasketItemsController(IBasketRepository cacheRepository, IBasketService basketService, ILogger<BasketItemsController> logger)
         {
             _cacheRepository = cacheRepository;
             _basketService = basketService;

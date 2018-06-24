@@ -11,10 +11,10 @@ namespace Basket.API.Services
     /// </summary>
     public class BasketService : IBasketService
     {
-        private readonly ICacheRepository _cacheRepository;
+        private readonly IBasketRepository _cacheRepository;
         private readonly ILogger<BasketService> _logger;
 
-        public BasketService(ICacheRepository cacheRepository, ILogger<BasketService> logger)
+        public BasketService(IBasketRepository cacheRepository, ILogger<BasketService> logger)
         {
             _cacheRepository = cacheRepository;
             _logger = logger;
