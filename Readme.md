@@ -39,7 +39,7 @@ This solution was developed on Windows 10, using:
 - Docker 18.03.1 using Linux containers.
 - RabbitMQ 3.7.6 from Docker.
 
-![Diagram](Diagram.png)
+![Diagram](Diagram2.png)
 
 ## Using the API
 - The swagger page for the Basket API shows all of the actions available to users of the API.
