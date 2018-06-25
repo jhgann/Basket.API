@@ -1,5 +1,5 @@
 # Basket API
-https://travis-ci.org/jhgann/Basket.API.svg?branch=master
+[![Build Status](https://travis-ci.org/jhgann/Basket.API.svg?branch=master)](https://travis-ci.org/jhgann/Basket.API)
 
 ## Introduction
 This is a prototype of a shopping basket microservice.  It demonstrates an outside client using HTTP requests to interact with a shopping basket.  It also demonstrates interservice asynchronous communication using a message broker.
