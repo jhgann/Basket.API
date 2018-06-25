@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using ClientApp.Config;
-using ClientApp.Controllers;
 using EventBusCore;
 using EventBusCore.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQEventBus;
 using Swashbuckle.AspNetCore.Swagger;
+using Polly;
 
 namespace ClientApp
 {
@@ -47,15 +42,16 @@ namespace ClientApp
             });
             services.Configure<ClientAppSettings>(Configuration);
 
+            // Add the http client to use to call our basket api.
+            // Use circuit breaker to stop requests after 2 failures.  
+            // Start back up after 1 minute.
             services.AddHttpClient("basket", client =>
             {
                 client.BaseAddress = new Uri(Configuration["BasketUrl"]);
-            });
-            //services.AddTransient<DemoController>();
-
-            //services.AddSingleton<IDictionaryContext, DictionaryContext>();
-            //services.AddTransient<IBasketRepository, InMemoryBasketRepository>();
-            //services.AddTransient<IBasketService, BasketService>();
+            }).AddTransientHttpErrorPolicy(policyBuilder => policyBuilder.CircuitBreakerAsync(
+                    handledEventsAllowedBeforeBreaking: 2,
+                    durationOfBreak: TimeSpan.FromMinutes(1)
+            ));
 
             if (bool.Parse(Configuration["EnableEventBus"]))
             {
@@ -147,16 +143,12 @@ namespace ClientApp
 
                 return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount, false);
             });
-
             services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
-            //services.AddTransient<ProductPriceChangedIntegrationEventHandler>();
         }
 
         private void ConfigureEventBus(IApplicationBuilder app)
         {
             var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-
-           // eventBus.Subscribe<ProductPriceChangedIntegrationEvent, ProductPriceChangedIntegrationEventHandler>();
         }
     }
 }
