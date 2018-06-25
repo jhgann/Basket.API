@@ -1,4 +1,4 @@
-# Basket API
+# Basket API 🛒
 [![Build Status](https://travis-ci.org/jhgann/Basket.API.svg?branch=master)](https://travis-ci.org/jhgann/Basket.API)
 
 ## Introduction
