@@ -28,7 +28,7 @@ Another option:
 3 containers should be created:
 - **basketapi** - http://localhost:55311/swagger/index.html
 - **clientapp** - http://localhost:55322/swagger/index.html
-- **raabbit** - http://localhost:15672/#/
+- **rabbit** - http://localhost:15672/#/
   - Management page for monitoring.
   - Username: guest
   - Password: guest
@@ -38,6 +38,8 @@ This solution was developed on Windows 10, using:
 - .NET Core SDK 2.1.301
 - Docker 18.03.1 using Linux containers.
 - RabbitMQ 3.7.6 from Docker.
+
+![Diagram](Diagram.png)
 
 ## Using the API
 - The swagger page for the Basket API shows all of the actions available to users of the API.
@@ -52,4 +54,3 @@ As I do not have a lot of experience with Docker and RabbitMQ, I encountered the
 - On the first run, RabbitMQ fails to connect once or twice.  It succeeds after that.  I'm assuming it is simply not up and running yet.
 - The testing project disables the event bus, as it is usually not running when I execute tests during development.  I would like to investigate running tests using docker so I can send test messages to the queue.
 
-![Diagram](Diagram.png)
