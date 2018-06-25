@@ -2,7 +2,11 @@ language: csharp
 mono: none
 dotnet: 2.1.301
 script:
- - dotnet restore
+ - dotnet restore EventCoreBus
+ - dotnet restore RabbitMQEventBus
+ - dotnet restore Basket.API
+ - dotnet restore ClientApp
+ - dotnet restore EndToEndTests
  - dotnet build EventCoreBus
  - dotnet build RabbitMQEventBus
  - dotnet build Basket.API
