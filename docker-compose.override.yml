@@ -1,9 +1,9 @@
 version: '3.4'
 
 services:
-  basket.api:
-    hostname: basket.api
-    container_name: basket.api
+  basketapi:
+    hostname: basketapi
+    container_name: basketapi
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:80
@@ -32,7 +32,7 @@ services:
       - EventBusConnection=rabbit
       - EventBusUserName=guest
       - EventBusPassword=guest
-      - BasketUrl=http://basket.api
+      - BasketUrl=http://basketapi
     ports:
       - "55322:80"
     volumes:

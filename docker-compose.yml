@@ -4,19 +4,19 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
 
-  basket.api:
-    image: ${DOCKER_REGISTRY}basketapi
+  basketapi:
+    image: basketapi
     build:
       context: .
       dockerfile: Basket.API/Dockerfile
     depends_on:
       - rabbitmq
   clientapp:
-    image: ${DOCKER_REGISTRY}clientapp
+    image: clientapp
     build:
       context: .
       dockerfile: ClientApp/Dockerfile
     depends_on:
       - rabbitmq
-      - basket.api
+      - basketapi
 

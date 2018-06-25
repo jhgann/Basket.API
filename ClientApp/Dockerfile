@@ -3,7 +3,7 @@ WORKDIR /app
 EXPOSE 54224
 EXPOSE 44322
 
-FROM microsoft/dotnet:2.1.1-sdk AS build
+FROM microsoft/dotnet:2.1.301-sdk AS build
 WORKDIR /src
 COPY ClientApp/ClientApp.csproj ClientApp/
 RUN dotnet restore ClientApp/ClientApp.csproj
