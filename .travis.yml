@@ -1,0 +1,11 @@
+language: csharp
+mono: none
+dotnet: 2.1.1
+script:
+ - dotnet restore
+ - dotnet build EventCoreBus
+ - dotnet build RabbitMQEventBus
+ - dotnet build Basket.API
+ - dotnet build ClientApp
+ - dotnet build EndToEndTests
+ - dotnet test EndToEndTests

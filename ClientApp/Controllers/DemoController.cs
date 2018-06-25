@@ -86,6 +86,20 @@ namespace ClientApp.Controllers
             return NoContent();
         }
 
+        [HttpGet]
+        [Route("Basket/{customerId}/BasketItems/{itemId}")]
+        public async Task<ActionResult<BasketItem>> GetItemInBasket(string customerId, string itemId)
+        {
+            var response = await _client.GetAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{itemId}");
+            var result = response.Content.ReadAsStringAsync().Result;
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound(result);
+            }
+            var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
+            return Created(response.Headers.Location, resultModel);
+        }
+
         [HttpPost]
         [Route("AddProductToBasket")]
         public async Task<ActionResult<BasketItem>> AddProductToBasket(string customerId, [FromBody] BasketItem item)
@@ -103,18 +117,20 @@ namespace ClientApp.Controllers
             return Created(response.Headers.Location, resultModel);
         }
 
-        [HttpGet]
-        [Route("Basket/{customerId}/BasketItems/{itemId}")]
-        public async Task<ActionResult<BasketItem>> GetItemInBasket(string customerId, string itemId)
+        [HttpDelete]
+        [Route("DeleteProductFromBasket")]
+        public async Task<ActionResult<BasketItem>> DeleteProductFromBasket(string customerId, string productId)
         {
-            var response = await _client.GetAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{itemId}");
+            var response = await _client.DeleteAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{productId}");
             var result = response.Content.ReadAsStringAsync().Result;
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            switch (response.StatusCode)
             {
-                return NotFound(result);
+                case HttpStatusCode.BadRequest:
+                    return BadRequest(result);
+                case HttpStatusCode.NotFound:
+                    return NotFound(result);
             }
-            var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
-            return Created(response.Headers.Location, resultModel);
+            return NoContent();
         }
 
         [HttpPost]

@@ -13,7 +13,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBusCore", "EventBusCor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMQEventBus", "RabbitMQEventBus\RabbitMQEventBus.csproj", "{283150AE-9CF3-4C6E-BBED-E8E3B4F303DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientApp", "ClientApp\ClientApp.csproj", "{57A8DA7F-BD20-4D6A-83F5-ED47348A83EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientApp", "ClientApp\ClientApp.csproj", "{57A8DA7F-BD20-4D6A-83F5-ED47348A83EF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{90839C3E-613F-4BFF-AD0E-912767F00BFE}"
+	ProjectSection(SolutionItems) = preProject
+		.travis.yml = .travis.yml
+		Readme.md = Readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
