@@ -18,7 +18,7 @@ It also demonstrates asynchronous communication between services using a message
 - Clone this repository.
 - Run `docker-compose build`.
 - Run `docker-compose up`.
-- Navigate to the URL's listed below.
+- Navigate to the URLs listed below.
 
 Another option:
 - Loading the project in Visual Studio.
@@ -36,18 +36,20 @@ Another option:
 This solution was developed on Windows 10, using:
 - Visual Studio 15.7.4
 - .NET Core SDK 2.1.301
--  Docker 18.03.1 using Linux containers.
--  RabbitMQ 3.7.6 from Docker.
+- Docker 18.03.1 using Linux containers.
+- RabbitMQ 3.7.6 from Docker.
+
+## Using the API
+- The swagger page for the Basket API shows all of the actions available to users of the API.
+- The swagger page for the ClientApp shows how a potential user could use the API.
+- The Client App can simulate another service changing the price of a product. This publishes a price change event to a message broker.  The Basket API is subscribed to this broker and will update the price of this product in any basket it happens to be in.
+- The Client App also demonstrates the use of the circuit breaker pattern.  This can be seen by disabling the Basket API container and making a few requests from the client app.  Once the Basket API is turned back on, requests will resume after 1 minute.  
 
 ## Current issues
-As I do not have a lot of experience with Docker and RabbitMQ, I encounted the following issues:
+As I do not have a lot of experience with Docker and RabbitMQ, I encountered the following issues:
 - HTTPS is not enabled for the service.  I could run all services using HTTPS but the ClientApp was unable to send requests to the Basket API.  It is very likely I simply have a docker configuration issue.
 - I occasionally need to restart Docker once after booting into Windows, before my debug build can create all of my containers.
 - On the first run, RabbitMQ fails to connect once or twice.  It succeeds after that.  I'm assuming it is simply not up and running yet.
 - The testing project disables the event bus, as it is usually not running when I execute tests during development.  I would like to investigate running tests using docker so I can send test messages to the queue.
 
-## Using the API
-- The swagger page for the Basket API shows all of the actions available to users of the API.
-- The swagger page for the ClientApp shows how a potential user could use the API.
-- The Client App also can simulate a catalog or other service changing the price of a product. This publishes a price change event to a message broker.  The Basket API is subscribed to this broker and will update the price of this product in any basket it happens to be in.
-
+![Diagram](Diagram.png)
