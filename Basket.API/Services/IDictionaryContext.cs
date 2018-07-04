@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Basket.API.Models;
+using Basket.Domain.Aggregates;
 
 namespace Basket.API.Services
 {

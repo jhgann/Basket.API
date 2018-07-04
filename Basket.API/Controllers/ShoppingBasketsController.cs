@@ -1,5 +1,4 @@
-﻿using Basket.API.Models;
-using Basket.API.Services;
+﻿using Basket.Domain.Aggregates;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Basket.API.Models;
+using System.Linq;
+using Basket.Domain.Aggregates;
 using Microsoft.Extensions.Logging;
 
 namespace Basket.API.Services
@@ -38,7 +39,7 @@ namespace Basket.API.Services
 
         public bool TryGetItemInBasket(string itemId, string customerId, out BasketItem foundItem)
         {
-            foundItem = _dictionaryContext.Baskets[customerId].BasketItems.Find(basketItem => basketItem.ProductId == itemId);
+            foundItem = _dictionaryContext.Baskets[customerId].BasketItems.FirstOrDefault(basketItem => basketItem.ProductId == itemId);
 
             if (foundItem == null)
             {

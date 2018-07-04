@@ -140,10 +140,7 @@ namespace ClientApp.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<BasketItem>> UpdateQuantity(string customerId, string itemId, [FromQuery] int newQuantity)
         {
-
-            var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
-            var jsonString = JsonConvert.SerializeObject(patch);
-            var response = await _client.PatchAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{itemId}", new StringContent(jsonString, Encoding.UTF8, "application/json"));
+            var response = await _client.PutAsJsonAsync($"/api/v1/shoppingbaskets/{customerId}/basketitems/{itemId}", newQuantity);
             var result = response.Content.ReadAsStringAsync().Result;
             switch (response.StatusCode)
             {

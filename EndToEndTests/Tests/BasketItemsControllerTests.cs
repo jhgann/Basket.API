@@ -1,4 +1,4 @@
-﻿using Basket.API.Models;
+﻿using Basket.Domain.Aggregates;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -26,20 +26,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsPostReturnsCreatedAndItem()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var response2 = await PostBasketItemAsync(basket, item);
             var result = response2.Content.ReadAsStringAsync().Result;
             var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
@@ -55,14 +46,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsPostBadContentReturnsBadRequest()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem { };
+            var item = new BasketItem(null,null,0,0);
             var response2 = await PostBasketItemAsync(basket, item);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response2.StatusCode);
@@ -71,24 +59,12 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsPostWithWrongBasketIdReturnsNotFound()
         {
-            var badBasket = new ShoppingBasket
-            {
-                CustomerId = "2"
-            };
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var badBasket = new ShoppingBasket("2");
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(badBasket, item);
             var result = postResponse2.Content.ReadAsStringAsync().Result;
 
@@ -99,20 +75,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsPostSameItemTwiceReturnsBadRequest()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
             var postResponse3 = await PostBasketItemAsync(basket, item);
             var result = postResponse3.Content.ReadAsStringAsync().Result;
@@ -126,26 +93,17 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsChangeQuantityReturnsOkAndItem()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 5;
             var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
             
-            var response3 = await PatchItemAsync(basket, item, patch);
+            var response3 = await PutItemQuantityAsync(basket, item, newQuantity);
             var result = response3.Content.ReadAsStringAsync().Result;
             var resultModel = JsonConvert.DeserializeObject<BasketItem>(result);
 
@@ -160,25 +118,16 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsChangeQuantityOutOfBoundsReturnsBadRequest()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 0;
             var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
-            var response3 = await PatchItemAsync(basket, item, patch);
+            var response3 = await PutItemQuantityAsync(basket, item, newQuantity);
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response3.StatusCode);
@@ -188,30 +137,18 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsChangeQuantityWithWrongBasketReturnsNotFound()
         {
-            var wrongBasket = new ShoppingBasket
-            {
-                CustomerId = "2"
-            };
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var wrongBasket = new ShoppingBasket("2");
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 5;
             var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
 
-            var response3 = await PatchItemAsync(wrongBasket, item, patch);
+            var response3 = await PutItemQuantityAsync(wrongBasket, item, newQuantity);
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.NotFound, response3.StatusCode);
@@ -221,33 +158,18 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsChangeQuantityWithWrongBasketItemReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasketAsync(basket);
             response.EnsureSuccessStatusCode();
 
-            var wrongItem = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name2",
-                ProductPrice = 2.99M,
-                Quantity = 2
-            };
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var wrongItem = new BasketItem(Guid.NewGuid().ToString(), "Product Name2", 2.99M, 2);
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var response2 = await PostBasketItemAsync(basket, item);
 
             var newQuantity = 5;
             var patch = new JsonPatchDocument<BasketItem>().Replace(x => x.Quantity, newQuantity);
 
-            var response3 = await PatchItemAsync(basket, wrongItem, patch);
+            var response3 = await PutItemQuantityAsync(basket, wrongItem, newQuantity);
             var result = response3.Content.ReadAsStringAsync().Result;
 
             Assert.AreEqual(HttpStatusCode.NotFound, response3.StatusCode);
@@ -259,28 +181,13 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsGetAllReturnsOkAndItems()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
-            var item2 = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name2",
-                ProductPrice = 2.99M,
-                Quantity = 2
-            };
+            var item2 = new BasketItem(Guid.NewGuid().ToString(), "Product Name2", 2.99M, 2);
             var postResponse3 = await PostBasketItemAsync(basket, item2);
 
             var response = await GetAsync(basket.CustomerId);
@@ -297,20 +204,11 @@ namespace EndToEndTests.Tests
         public async Task BasketItemsGetAllByWrongIdReturnsNotFound()
         {
             var badCustomerId = "2";
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
             var postResult2 = postResponse2.Content.ReadAsStringAsync().Result;
 
@@ -324,20 +222,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsGetByIdReturnsOk()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
             var postResult2 = postResponse2.Content.ReadAsStringAsync().Result;
 
@@ -358,19 +247,10 @@ namespace EndToEndTests.Tests
         public async Task BasketItemsGetByWrongItemIdReturnsNotFound()
         {
             var badItemId = "wrongItemId";
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
 
             var response = await GetAsync(basket.CustomerId, badItemId);
@@ -384,19 +264,10 @@ namespace EndToEndTests.Tests
         public async Task BasketItemsGetByWrongCustomerIdReturnsNotFound()
         {
             var badCustomerId = "2";
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
 
             var response = await GetAsync(badCustomerId, item.ProductId);
@@ -411,20 +282,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsDeleteByIdReturnsOk()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
             var postResult2 = postResponse2.Content.ReadAsStringAsync().Result;
 
@@ -437,20 +299,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsDeleteByIdThenGetReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
             var postResult2 = postResponse2.Content.ReadAsStringAsync().Result;
 
@@ -465,20 +318,11 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsDeleteByWrongIdReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
             var postResult2 = postResponse2.Content.ReadAsStringAsync().Result;
 
@@ -491,19 +335,10 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task BasketItemsDeleteTwiceReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
 
             var response = await DeleteAsync(basket.CustomerId, item.ProductId);
@@ -521,19 +356,10 @@ namespace EndToEndTests.Tests
         public async Task BasketItemsDeleteFromWrongBasketReturnsNotFound()
         {
             var badCustomerId = "2";
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasketAsync(basket);
 
-            var item = new BasketItem
-            {
-                ProductId = Guid.NewGuid().ToString(),
-                ProductName = "Product Name",
-                ProductPrice = 1.99M,
-                Quantity = 1
-            };
+            var item = new BasketItem(Guid.NewGuid().ToString(), "Product Name", 1.99M, 1);
             var postResponse2 = await PostBasketItemAsync(basket, item);
 
             var response = await DeleteAsync(badCustomerId, item.ProductId);
@@ -550,10 +376,8 @@ namespace EndToEndTests.Tests
         private async Task<HttpResponseMessage> PostBasketItemAsync(ShoppingBasket basket, BasketItem item) => 
             await _context.Client.PostAsJsonAsync($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems", item);
 
-        private async Task<HttpResponseMessage> PatchItemAsync(ShoppingBasket basket, BasketItem item, JsonPatchDocument<BasketItem> patch) {
-            var jsonString = JsonConvert.SerializeObject(patch);
-            return await _context.Client.PatchAsync(new Uri($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems/{item.ProductId}", UriKind.Relative), new StringContent(jsonString, Encoding.UTF8, "application/json"));
-        }
+        private async Task<HttpResponseMessage> PutItemQuantityAsync(ShoppingBasket basket, BasketItem item, int quantity) => 
+            await _context.Client.PutAsJsonAsync(new Uri($"/api/v1/shoppingbaskets/{basket.CustomerId}/basketitems/{item.ProductId}", UriKind.Relative), quantity);
 
         private async Task<HttpResponseMessage> GetAsync(string customerId) =>
             await _context.Client.GetAsync(new Uri($"/api/v1/shoppingbaskets/{customerId}/basketitems", UriKind.Relative));

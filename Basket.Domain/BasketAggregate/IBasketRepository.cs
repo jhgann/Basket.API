@@ -1,7 +1,6 @@
-﻿using Basket.API.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Basket.API.Services
+namespace Basket.Domain.Aggregates
 {
     /// <summary>
     /// Methods to implement to interact with the shopping basket repository.

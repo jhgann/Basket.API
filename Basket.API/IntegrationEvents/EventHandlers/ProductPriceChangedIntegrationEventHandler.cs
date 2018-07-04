@@ -1,6 +1,5 @@
 ﻿using Basket.API.IntegrationEvents.Events;
-using Basket.API.Models;
-using Basket.API.Services;
+using Basket.Domain.Aggregates;
 using EventBusCore.Abstractions;
 using System;
 using System.Linq;
@@ -54,7 +53,7 @@ namespace Basket.API.IntegrationEvents.EventHandlers
                 {
                     if (item.ProductPrice != newPrice)
                     {
-                        item.ProductPrice = newPrice;
+                        basket.UpdatePriceOfProductInBasket(productId, newPrice);
                     }
                 }
                 _repository.UpdateBasket(basket);

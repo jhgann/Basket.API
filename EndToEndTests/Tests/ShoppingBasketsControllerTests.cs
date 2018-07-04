@@ -1,4 +1,4 @@
-﻿using Basket.API.Models;
+﻿using Basket.Domain.Aggregates;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using System;
@@ -23,10 +23,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsPostReturnsCreated()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var response = await PostBasket(basket);
 
             response.EnsureSuccessStatusCode();
@@ -36,7 +33,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsPostBadContentReturnsBadRequest()
         {
-            var basket = new ShoppingBasket {};
+            var basket = new ShoppingBasket(null);
 
             var response = await PostBasket(basket);
 
@@ -48,10 +45,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsGetByIdReturnsOk()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasket(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
@@ -68,10 +62,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsGetByWrongIdReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasket(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
@@ -85,10 +76,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsDeleteByIdReturnsOk()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasket(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
@@ -101,10 +89,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsDeleteByIdThenGetReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasket(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
@@ -119,10 +104,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsDeleteByWrongIdReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasket(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 
@@ -135,10 +117,7 @@ namespace EndToEndTests.Tests
         [TestMethod]
         public async Task ShoppingBasketsDeleteTwiceReturnsNotFound()
         {
-            var basket = new ShoppingBasket
-            {
-                CustomerId = "1"
-            };
+            var basket = new ShoppingBasket("1");
             var postResponse = await PostBasket(basket);
             var postResult = postResponse.Content.ReadAsStringAsync().Result;
 

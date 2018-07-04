@@ -4,6 +4,7 @@ using Basket.API.Config;
 using Basket.API.IntegrationEvents.EventHandlers;
 using Basket.API.IntegrationEvents.Events;
 using Basket.API.Services;
+using Basket.Domain.Aggregates;
 using EventBusCore;
 using EventBusCore.Abstractions;
 using Microsoft.AspNetCore.Builder;

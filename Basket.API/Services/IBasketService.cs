@@ -1,5 +1,4 @@
-﻿using Basket.API.Models;
-using Microsoft.AspNetCore.JsonPatch;
+﻿using Basket.Domain.Aggregates;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -24,6 +23,6 @@ namespace Basket.API.Services
         /// Trys to update an item in the shopping basket via JsonPatch.
         /// </summary>
         /// <returns> True if update was successful. If false, validation results should contain reason why.</returns>
-        bool TryUpdateItemInBasket(ShoppingBasket basket, BasketItem item, JsonPatchDocument<BasketItem> patch, out ICollection<ValidationResult> validationResults);
+        bool TryUpdateBasketItemQuantity(ShoppingBasket basket, BasketItem item, int newQuantity, out ICollection<ValidationResult> validationResults);
     }
 }

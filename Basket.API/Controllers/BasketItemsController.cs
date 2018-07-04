@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net;
-using Basket.API.Models;
+using Basket.Domain.Aggregates;
 using Basket.API.Services;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -44,7 +44,7 @@ namespace Basket.API.Controllers
             {
                 return BasketNotFound(customerId);
             }
-            return shoppingBasket.BasketItems;
+            return shoppingBasket.BasketItems.ToList();
         }
 
         /// <summary>
@@ -100,11 +100,11 @@ namespace Basket.API.Controllers
         /// <summary>
         /// Updates the quantity of of a product in a shopping basket
         /// </summary>
-        [HttpPatch("{itemId}")]
+        [HttpPut("{itemId}")]
         [ProducesResponseType(typeof(BasketItem), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]JsonPatchDocument<BasketItem> patch)
+        public ActionResult<BasketItem> UpdateQuantity(string customerId, string itemId, [FromBody]int newQuantity)
         {
             // Try to get a basket to add the item to
             if (!_basketRepository.TryGetBasket(customerId, out ShoppingBasket shoppingBasket))
@@ -119,7 +119,7 @@ namespace Basket.API.Controllers
             }
 
             // Validate change and update via service
-            if (!_basketService.TryUpdateItemInBasket(shoppingBasket, item, patch, out ICollection<ValidationResult> validationResults))
+            if (!_basketService.TryUpdateBasketItemQuantity(shoppingBasket, item, newQuantity, out ICollection<ValidationResult> validationResults))
             {
                 return BadRequest(validationResults);
             }

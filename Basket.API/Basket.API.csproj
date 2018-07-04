@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Basket.Domain\Basket.Domain.csproj" />
     <ProjectReference Include="..\EventBusCore\EventBusCore.csproj" />
     <ProjectReference Include="..\RabbitMQEventBus\RabbitMQEventBus.csproj" />
   </ItemGroup>
