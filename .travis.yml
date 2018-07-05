@@ -5,15 +5,4 @@ script:
 - dotnet build Basket.API
 - dotnet build ClientApp
 - dotnet build EndToEndTests
-- dotnet test
-# - dotnet restore EventBusCore
-# - dotnet restore RabbitMQEventBus
-# - dotnet restore Basket.API
-# - dotnet restore ClientApp
-# - dotnet restore EndToEndTests
-# - dotnet build EventBusCore
-# - dotnet build RabbitMQEventBus
-# - dotnet build Basket.API
-# - dotnet build ClientApp
-# - dotnet build EndToEndTests
-# - dotnet test EndToEndTests
+- dotnet test EndToEndTests
