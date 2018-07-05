@@ -1,7 +1,7 @@
 ﻿using Basket.Domain.Aggregates;
 using System.Collections.Generic;
 
-namespace Basket.API.Services
+namespace Basket.Infrastructure.Context
 {
     public class DictionaryContext : IDictionaryContext
     {

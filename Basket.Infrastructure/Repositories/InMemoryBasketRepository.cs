@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Basket.Domain.Aggregates;
+using Basket.Infrastructure.Context;
 using Microsoft.Extensions.Logging;
 
-namespace Basket.API.Services
+namespace Basket.Infrastructure.Repositories
 {
     public class InMemoryBasketRepository : IBasketRepository
     {
